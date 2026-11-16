@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
-import { AutoRefresh } from "@/components/shared/auto-refresh";
+import { RefreshButton } from "@/components/shared/refresh-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { UrlPagination } from "@/components/shared/url-pagination";
 import {
@@ -34,16 +34,12 @@ export default async function Page({ searchParams }: { searchParams: Promise<Raw
     const orders = filterActiveOrders(await ordersP, filters);
     const filtered = Object.values(filters).some(Boolean);
     const assignPartners = (await partnersP).map(({ id, name, phone, active }) => ({ id, name, phone, active }));
-    body = (
-      <>
-        <AutoRefresh intervalMs={30_000} />
-        {orders.length === 0 ? (
-          <EmptyState title={filtered ? "No orders match these filters." : "No open orders."} />
-        ) : (
-          <OrderList orders={orders} selectable partners={assignPartners} />
-        )}
-      </>
-    );
+    body =
+      orders.length === 0 ? (
+        <EmptyState title={filtered ? "No orders match these filters." : "No open orders."} />
+      ) : (
+        <OrderList orders={orders} selectable partners={assignPartners} />
+      );
   } else {
     const params = historyParamsSchema.parse(raw);
     values = {
@@ -67,7 +63,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<Raw
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="Orders" />
+      <PageHeader title="Orders" actions={<RefreshButton />} />
       <OrdersTabs view={view} />
       <OrdersFilters view={view} partners={partners} values={values} />
       {body}

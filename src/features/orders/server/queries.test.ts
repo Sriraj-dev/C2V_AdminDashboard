@@ -62,4 +62,41 @@ describe("orders queries", () => {
     expect(await getPartnersForAssign()).toEqual([{ id: "p", name: "N", phone: "1", active: false }]);
     expect(calls[0]?.path).toBe("/admin/partners");
   });
+  it("getPartnerLinks builds links and omits partners without a token", async () => {
+    vi.stubEnv("C2V_API_URL", "http://localhost:8080");
+    vi.stubEnv("PUBLIC_APP_URL", "https://app.example.com/");
+    result = {
+      items: [
+        { id: "p1", name: "A", phone: "1", active: true, accessToken: "tok1" },
+        { id: "p2", name: "B", phone: "2", active: true, accessToken: null },
+      ],
+    };
+    const { getPartnerLinks } = await load();
+    expect(await getPartnerLinks()).toEqual({ p1: "https://app.example.com/p/tok1" });
+    vi.unstubAllEnvs();
+  });
+  it("shares one partners request between getPartnersForAssign and getPartnerLinks", async () => {
+    vi.stubEnv("C2V_API_URL", "http://localhost:8080");
+    vi.stubEnv("PUBLIC_APP_URL", "http://localhost:3000");
+    result = { items: [{ id: "p1", name: "A", phone: "1", active: true, accessToken: "tok1" }] };
+    vi.resetModules();
+    mockNextHeaders();
+    vi.doMock("@/lib/api/admin", () => ({ adminRead }));
+    // React cache only dedupes inside a render; emulate one render scope with a memoiser.
+    vi.doMock("react", async (orig) => ({
+      ...(await orig<typeof import("react")>()),
+      cache: <T extends () => unknown>(fn: T) => {
+        let v: unknown;
+        let done = false;
+        return (() => (done ? v : ((done = true), (v = fn())))) as T;
+      },
+    }));
+    const { getPartnersForAssign, getPartnerLinks } = await import("./queries");
+    const partners = await getPartnersForAssign();
+    await getPartnerLinks();
+    expect(calls.filter((c) => c.path === "/admin/partners")).toHaveLength(1);
+    expect(partners[0]).not.toHaveProperty("accessToken");
+    vi.doUnmock("react");
+    vi.unstubAllEnvs();
+  });
 });

@@ -1,5 +1,7 @@
 import "server-only";
+import { cache } from "react";
 import { adminRead } from "@/lib/api/admin";
+import { partnerLink } from "@/lib/partner-link";
 import type { OrderView, Paged, Partner } from "@/lib/api/types";
 import { HISTORY_PAGE_SIZE, REAL_STATUSES, UNPAID_STATUSES } from "../constants";
 import type { HistoryParams } from "../schemas";
@@ -30,7 +32,18 @@ export async function getOrder(id: string): Promise<OrderView> {
 
 export type AssignablePartner = Pick<Partner, "id" | "name" | "phone" | "active">;
 
+/** One GET /admin/partners per render, shared by every caller. */
+const fetchPartners = cache(() => adminRead<{ items: Partner[] }>("/admin/partners"));
+
 export async function getPartnersForAssign(): Promise<AssignablePartner[]> {
-  const { items } = await adminRead<{ items: Partner[] }>("/admin/partners");
+  const { items } = await fetchPartners();
   return items.map(({ id, name, phone, active }) => ({ id, name, phone, active }));
+}
+
+/** partnerId -> private partner link. Server-only; partners without a token are omitted. */
+export async function getPartnerLinks(): Promise<Record<string, string>> {
+  const { items } = await fetchPartners();
+  const links: Record<string, string> = {};
+  for (const p of items) if (p.accessToken) links[p.id] = partnerLink(p.accessToken);
+  return links;
 }

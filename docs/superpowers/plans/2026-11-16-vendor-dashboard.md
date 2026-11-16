@@ -291,7 +291,7 @@ expect(availableActions({ status: 'delivered', paymentStatus: 'paid', source: 's
 // getOrderHistory: default query has status 'confirmed,assigned,out_for_delivery,delivered,cancelled', page 1, pageSize 25; includeUnpaid adds the three unpaid statuses
 ```
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Orders page.** `?view=active` (default) renders `OrdersFilters` (date, pincode, partner incl. "Unassigned", search; client leaf that writes URL params with `router.replace`) + `OrderList` of `filterActiveOrders(getActiveOrders())`; `AutoRefresh` 30 s. `?view=history` renders history filters (status multi-select, date range, include unpaid switch) + `OrderList` + `UrlPagination`. Empty states for both.
+- [ ] **Step 5: Orders page.** `?view=active` (default) renders `OrdersFilters` (date, pincode, partner incl. "Unassigned", search; client leaf that writes URL params with `router.replace`) + `OrderList` of `filterActiveOrders(getActiveOrders())`; `RefreshButton` in the header (no auto-refresh; user ruling 2026-11-16). `?view=history` renders history filters (status multi-select, date range, include unpaid switch) + `OrderList` + `UrlPagination`. Empty states for both.
 - [ ] **Step 6: Verify** suite + typecheck + lint + build. **Live check** (read-only): both tabs load, filters change the URL and results, pagination works, phone layout shows cards.
 - [ ] **Step 7: Stop for review; on approval commit** `feat(orders): active and history order lists with URL filters`.
 
@@ -348,7 +348,7 @@ it('no action sends a tenant id in path or body') // inspect every adminWrite ca
 - Modify: `src/app/(dashboard)/page.tsx`, `orders/index.ts`
 
 **Interfaces:**
-- Consumes: `getActiveOrders`, `getPartnersForAssign`, `getCurrentUser` (tenant name), `assignOrder`, `bulkAssign`, `CopyButton`, `AutoRefresh`, `serverEnv().PUBLIC_APP_URL`.
+- Consumes: `getActiveOrders`, `getPartnersForAssign`, `getCurrentUser` (tenant name), `assignOrder`, `bulkAssign`, `CopyButton`, `RefreshButton`, `serverEnv().PUBLIC_APP_URL`.
 - Produces (`deliveries.ts`, pure):
   - `deliveryDates(orders: OrderView[]): string[]` (unique, ascending)
   - `pickDefaultDate(dates: string[], today: string): string` (today if present; else earliest date > today; else latest date < today (overdue); else today)
@@ -386,7 +386,7 @@ expect(waShareUrl('919800000002', 'a b')).toBe('https://wa.me/919800000002?text=
 expect(partnerLink('t'.repeat(43))).toBe(`http://localhost:3000/p/${'t'.repeat(43)}`); // src/lib/partner-link.test.ts
 ```
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: Page `/`.** `?date=` in URL (default `pickDefaultDate(..., todayInIST())`). `DeliveryDatePicker` shows chips for each date with counts, overdue dates marked "Overdue". `UnassignedGroup`: checkbox list + partner select + Assign (uses `bulkAssign`). `PartnerDeliveryGroup` per partner: header (name, tap-to-call, count, Out-for-delivery/Delivered counts), pincode sub-groups with compact order rows linking to detail; `ShareActions`: Copy list, Share on WhatsApp, Copy partner link (only if the partner's `accessToken` is set; link built server-side with `partnerLink`), Print (opens `/deliveries/print?date=&partnerId=` in a new tab). `AutoRefresh` 30 s. Empty state "No open deliveries."
+- [ ] **Step 5: Page `/`.** `?date=` in URL (default `pickDefaultDate(..., todayInIST())`). `DeliveryDatePicker` shows chips for each date with counts, overdue dates marked "Overdue". `UnassignedGroup`: checkbox list + partner select + Assign (uses `bulkAssign`). `PartnerDeliveryGroup` per partner: header (name, tap-to-call, count, Out-for-delivery/Delivered counts), pincode sub-groups with compact order rows linking to detail; `ShareActions`: Copy list, Share on WhatsApp, Copy partner link (only if the partner's `accessToken` is set; link built server-side with `partnerLink`), Print (opens `/deliveries/print?date=&partnerId=` in a new tab). `RefreshButton` in the header (no auto-refresh). Empty state "No open deliveries."
 - [ ] **Step 6: Print page** in `(print)` group (no shell, own minimal layout that still requires a session via `getCurrentUser`): one partner's orders for the date as a table with address, landmark, phone, items, a checkbox column; `window.print()` button; print CSS hides the button.
 - [ ] **Step 7: Verify** suite + typecheck + lint + build. **Live check** (read-only): default date, grouping, share link opens WhatsApp with the text, print page.
 - [ ] **Step 8: Stop for review; on approval commit** `feat(deliveries): deliveries board by day and partner with share and print`.
@@ -441,14 +441,14 @@ expect(partnerLink('t'.repeat(43))).toBe(`http://localhost:3000/p/${'t'.repeat(4
 - Modify: `next.config.ts` (headers for `/p/:path*`)
 
 **Interfaces:**
-- Consumes: `partnerRead`, `partnerWrite`, `fromApiError`, `formatDeliveryDate`, `telHref`, `ConfirmDialog`, `AutoRefresh`.
+- Consumes: `partnerRead`, `partnerWrite`, `fromApiError`, `formatDeliveryDate`, `telHref`, `ConfirmDialog`, `RefreshButton`.
 - Produces: `TOKEN_RE = /^[A-Za-z0-9_-]{43}$/` (`utils.ts`; bad shape → `notFound()` without calling the API); `getPartnerOrders(token: string): Promise<{ partner: { name: string }; items: PartnerOrderView[] }>`; actions `partnerOutForDelivery(token: string, orderId: string): Promise<ActionResult<{ order: PartnerOrderView }>>`, `partnerDelivered(token: string, orderId: string): Promise<ActionResult<{ order: PartnerOrderView; notified: boolean }>>` (both validate token shape and uuid, never log the token, `revalidatePath('/p/[token]', 'page')`).
 - Headers for `/p/:path*`: `Referrer-Policy: no-referrer`, `Cache-Control: no-store`, `X-Robots-Tag: noindex`. Page metadata `robots: { index: false }`.
 - Copy: not-found "This link isn't active. Ask the shop for a new one."; empty "No deliveries assigned to you right now."; 404 from an action → "This order is no longer assigned to you." then refresh.
 
 - [ ] **Step 1: Write failing tests**: bad-shape token → `notFound` and no fetch; actions call `/partner/<token>/orders/<id>/out-for-delivery` and `/delivered` with no Authorization header; 409 → API message; 404 → the fixed copy above; non-uuid orderId rejected; a test asserting `next.config.ts` `headers()` returns the three headers for `/p/:path*`.
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: UI.** `(partner)/layout.tsx`: minimal, no dashboard shell. Page: "Hi {name}", orders grouped by delivery date (overdue first, flagged), card per order: code, status, customer name, Call button (`tel:`), address + landmark, Map button, items "name × qty". Buttons: "Out for delivery" (assigned), "Delivered" (out_for_delivery; confirm "Mark {code} delivered? The customer gets a WhatsApp message."). Large tap targets (min 44 px). `AutoRefresh` 60 s. `notified:false` → warning toast as in Task 6.
+- [ ] **Step 5: UI.** `(partner)/layout.tsx`: minimal, no dashboard shell. Page: "Hi {name}", orders grouped by delivery date (overdue first, flagged), card per order: code, status, customer name, Call button (`tel:`), address + landmark, Map button, items "name × qty". Buttons: "Out for delivery" (assigned), "Delivered" (out_for_delivery; confirm "Mark {code} delivered? The customer gets a WhatsApp message."). Large tap targets (min 44 px). `notified:false` → warning toast as in Task 6. A `RefreshButton` (no auto-refresh).
 - [ ] **Step 6: Verify** suite + typecheck + lint + build. **Live check** at 390×844: page loads, response headers present (inspect), deactivated/reset link shows the not-found copy.
 - [ ] **Step 7: Stop for review; on approval commit** `feat(partner): private delivery partner page with out-for-delivery and delivered`.
 
@@ -525,7 +525,7 @@ expect(partnerLink('t'.repeat(43))).toBe(`http://localhost:3000/p/${'t'.repeat(4
 - shadcn add: `textarea`, `scroll-area`
 
 **Interfaces:**
-- Consumes: `adminRead`, `adminWrite`, `AutoRefresh`, `formatDateTime`. The per-row "awaiting reply" flag is `canReply && lastMessage.direction === 'in'` (same rule as navigation's counter; features can't share it, so it's one line here).
+- Consumes: `adminRead`, `adminWrite`, `AutoRefresh`, `RefreshButton`, `formatDateTime`. The per-row "awaiting reply" flag is `canReply && lastMessage.direction === 'in'` (same rule as navigation's counter; features can't share it, so it's one line here).
 - Produces (`message-view.ts`, pure): `toMessageView(m: ChatMessage): MessageView` where
   `MessageView = { kind: 'text'; body: string } | { kind: 'interactive'; header?: string; body: string; footer?: string; options: string[] } | { kind: 'reply'; title: string } | { kind: 'form'; label: 'Order form submitted' } | { kind: 'image'; url?: string; caption?: string } | { kind: 'template'; name: string; params: string[] } | { kind: 'location'; mapUrl: string } | { kind: 'fallback'; body: string }`.
   Rules: out `interactive` button → options from `action.buttons[].reply.title`; list → `action.button` + every `sections[].rows[].title`; flow → `action.parameters.flow_cta`. In `interactive.button_reply|list_reply` → `reply` with title; `nfm_reply` → `form`; `button` (template quick reply) → `reply` with `button.text`; `image` → `image.link` / `caption`; `template` → name + body component text params; `location` → `https://maps.google.com/?q=<lat>,<lng>`. Anything else, missing fields, or `{}` payload → `fallback` with `text ?? '[' + type + ']'`. Never throws.
@@ -534,7 +534,7 @@ expect(partnerLink('t'.repeat(43))).toBe(`http://localhost:3000/p/${'t'.repeat(4
 
 - [ ] **Step 1: Write failing tests** `message-view.test.ts` using the contract's §10 interactive example (→ `options: ['Order Eggs', 'My Orders']`), one case per rule above, plus `{}` payload with text → fallback text, and `{}` with null text and type `sticker` → `'[sticker]'`; action tests: trims text, rejects empty and 4097 chars, maps `outside_reply_window` and `provider_error`.
 - [ ] **Step 2: Run** → FAIL. **Step 3: Implement.** **Step 4: Run** → PASS.
-- [ ] **Step 5: UI.** `chats/layout.tsx`: on `md+` list column + outlet side by side; on phones `/chats` shows the list and `/chats/[id]` shows the thread with a back link. List rows: name, phone, last message preview, relative time, "Awaiting reply" badge, "Reply window closed" muted label. Thread: bubbles left (in) / right (out), WhatsApp-ish neutral colours from theme tokens, options as non-clickable chips, time under each, day separators in IST; scroll to bottom on load and on new messages. `ReplyBox` (textarea, Enter sends on desktop, Shift+Enter newline; disabled with copy when `!canReply`). `AutoRefresh` 10 s on the thread, 30 s on the list.
+- [ ] **Step 5: UI.** `chats/layout.tsx`: on `md+` list column + outlet side by side; on phones `/chats` shows the list and `/chats/[id]` shows the thread with a back link. List rows: name, phone, last message preview, relative time, "Awaiting reply" badge, "Reply window closed" muted label. Thread: bubbles left (in) / right (out), WhatsApp-ish neutral colours from theme tokens, options as non-clickable chips, time under each, day separators in IST; scroll to bottom on load and on new messages. `ReplyBox` (textarea, Enter sends on desktop, Shift+Enter newline; disabled with copy when `!canReply`). No auto-refresh by default: a `RefreshButton`, plus an "Auto-refresh" switch (off by default) that mounts `AutoRefresh` (10 s on the thread, 30 s on the list) only while on.
 - [ ] **Step 6: Verify** suite + typecheck + lint + build; live check per the user's answer.
 - [ ] **Step 7: Stop for review; on approval commit** `feat(chats): conversations, whatsapp-like thread and reply within 24h`.
 

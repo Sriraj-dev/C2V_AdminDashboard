@@ -22,3 +22,15 @@ describe("dates", () => {
     expect(addDays("2026-03-01", -1)).toBe("2026-02-28");
   });
 });
+
+describe("isValidYmd", () => {
+  it("accepts real dates and rejects impossible or malformed ones", async () => {
+    const { isValidYmd } = await import("./dates");
+    expect(isValidYmd("2026-11-18")).toBe(true);
+    expect(isValidYmd("2024-02-29")).toBe(true);
+    expect(isValidYmd("2026-02-31")).toBe(false);
+    expect(isValidYmd("2026-13-01")).toBe(false);
+    expect(isValidYmd("2026-1-1")).toBe(false);
+    expect(isValidYmd("")).toBe(false);
+  });
+});
