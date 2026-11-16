@@ -22,6 +22,12 @@ export function availableActions(o: Pick<OrderView, "status" | "paymentStatus" |
   return actions;
 }
 
+/** True when the order can be (re)assigned, i.e. may be part of a bulk assign. */
+export function isAssignable(o: Pick<OrderView, "status" | "paymentStatus" | "source">): boolean {
+  const a = availableActions(o);
+  return a.includes("assign") || a.includes("reassign");
+}
+
 export function customerName(o: Pick<OrderView, "address" | "customer">): string {
   return o.address.name || o.customer.profileName || "Unknown";
 }

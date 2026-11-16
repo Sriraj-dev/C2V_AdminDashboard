@@ -46,6 +46,8 @@ Decided with the user on 2026-11-15:
 | 409 | `outside_reply_window` | Chat reply more than 24 h after the customer's last message |
 | 422 | `not_supported` | e.g. refunding a subscription order |
 | 502 | `provider_error` | Cashfree or WhatsApp call failed (nothing was changed in the DB) |
+| 503 | `db_unavailable` | Database briefly unreachable or a query was cancelled. Safe to retry after a few seconds |
+| 503 | `timeout` | The request took over 15 s (applies to every `/admin` and `/partner` route). An action may still have gone through, so reload the data before retrying it |
 | 500 | `internal` | Unexpected; logged server-side |
 
 ---

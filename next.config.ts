@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Never log action arguments (passwords) or partner-link URLs (tokens).
+  logging: {
+    serverFunctions: false,
+    incomingRequests: { ignore: [/^\/p\//] },
+  },
   turbopack: {
     rules: {
       "*.css": {

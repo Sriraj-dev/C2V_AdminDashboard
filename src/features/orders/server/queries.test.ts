@@ -56,10 +56,10 @@ describe("orders queries", () => {
     expect(await getOrder("9")).toEqual({ id: "9" });
     expect(calls[0]?.path).toBe("/admin/orders/9");
   });
-  it("getPartnersForAssign picks fields", async () => {
+  it("getPartnersForAssign picks fields and never returns the access token", async () => {
     result = { items: [{ id: "p", name: "N", phone: "1", active: false, accessToken: "t", openOrderCount: 3, createdAt: "z" }] };
     const { getPartnersForAssign } = await load();
-    expect(await getPartnersForAssign()).toEqual([{ id: "p", name: "N", phone: "1", active: false, accessToken: "t" }]);
+    expect(await getPartnersForAssign()).toEqual([{ id: "p", name: "N", phone: "1", active: false }]);
     expect(calls[0]?.path).toBe("/admin/partners");
   });
 });

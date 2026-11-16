@@ -43,3 +43,11 @@ export const historyParamsSchema = z.object({
   }, z.number().int().min(1)),
 });
 export type HistoryParams = z.infer<typeof historyParamsSchema>;
+
+/** Server Action inputs. Strict so unexpected keys (e.g. a tenant id) are rejected. */
+export const orderIdSchema = z.uuid();
+export const assignInputSchema = z.strictObject({ orderId: z.uuid(), partnerId: z.uuid() });
+export const bulkAssignInputSchema = z.strictObject({
+  orderIds: z.array(z.uuid()).min(1).max(100),
+  partnerId: z.uuid(),
+});

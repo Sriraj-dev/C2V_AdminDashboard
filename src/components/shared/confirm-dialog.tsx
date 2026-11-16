@@ -15,7 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 
 type ConfirmDialogProps = {
-  trigger: ReactNode;
+  trigger?: ReactNode;
+  /** Controlled mode: pass both `open` and `onOpenChange` (e.g. to open it from another dialog's result). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   title: string;
   description: ReactNode;
   confirmLabel: string;
@@ -26,13 +29,17 @@ type ConfirmDialogProps = {
 /** Stays open and disables both buttons while `onConfirm` is pending; closes when it resolves. */
 export function ConfirmDialog({
   trigger,
+  open: controlledOpen,
+  onOpenChange,
   title,
   description,
   confirmLabel,
   destructive = false,
   onConfirm,
 }: ConfirmDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [innerOpen, setInnerOpen] = useState(false);
+  const open = controlledOpen ?? innerOpen;
+  const setOpen = onOpenChange ?? setInnerOpen;
   const [pending, setPending] = useState(false);
 
   async function handleConfirm() {
@@ -50,7 +57,7 @@ export function ConfirmDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={(next) => !pending && setOpen(next)}>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+      {trigger && <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

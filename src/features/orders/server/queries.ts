@@ -28,9 +28,9 @@ export async function getOrder(id: string): Promise<OrderView> {
   return order;
 }
 
-export type AssignablePartner = Pick<Partner, "id" | "name" | "phone" | "active" | "accessToken">;
+export type AssignablePartner = Pick<Partner, "id" | "name" | "phone" | "active">;
 
 export async function getPartnersForAssign(): Promise<AssignablePartner[]> {
   const { items } = await adminRead<{ items: Partner[] }>("/admin/partners");
-  return items.map(({ id, name, phone, active, accessToken }) => ({ id, name, phone, active, accessToken }));
+  return items.map(({ id, name, phone, active }) => ({ id, name, phone, active }));
 }

@@ -7,3 +7,5 @@ export type { OrderAction } from "./constants";
 export { activeFiltersSchema, historyParamsSchema } from "./schemas";
 export { getActiveOrders, getOrder, getOrderHistory, getPartnersForAssign } from "./server/queries";
 export { availableActions, filterActiveOrders } from "./utils";
+export { OrderDetail } from "./components/order-detail";
+export type { PartnerOption } from "./types";

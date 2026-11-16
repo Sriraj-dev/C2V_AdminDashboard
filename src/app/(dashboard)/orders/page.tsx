@@ -33,13 +33,14 @@ export default async function Page({ searchParams }: { searchParams: Promise<Raw
     const ordersP = getActiveOrders();
     const orders = filterActiveOrders(await ordersP, filters);
     const filtered = Object.values(filters).some(Boolean);
+    const assignPartners = (await partnersP).map(({ id, name, phone, active }) => ({ id, name, phone, active }));
     body = (
       <>
         <AutoRefresh intervalMs={30_000} />
         {orders.length === 0 ? (
           <EmptyState title={filtered ? "No orders match these filters." : "No open orders."} />
         ) : (
-          <OrderList orders={orders} />
+          <OrderList orders={orders} selectable partners={assignPartners} />
         )}
       </>
     );
