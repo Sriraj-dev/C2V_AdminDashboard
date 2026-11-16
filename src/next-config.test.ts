@@ -17,3 +17,17 @@ describe("next.config logging", () => {
     expect(ignore.some((r) => r.test("/orders"))).toBe(false);
   });
 });
+
+describe("next.config headers", () => {
+  it("sets privacy headers on /p/:path*", async () => {
+    const rules = (await nextConfig.headers?.()) ?? [];
+    const rule = rules.find((r) => r.source === "/p/:path*");
+    expect(rule?.headers).toEqual(
+      expect.arrayContaining([
+        { key: "Referrer-Policy", value: "no-referrer" },
+        { key: "Cache-Control", value: "no-store" },
+        { key: "X-Robots-Tag", value: "noindex" },
+      ]),
+    );
+  });
+});
