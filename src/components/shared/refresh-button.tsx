@@ -14,6 +14,7 @@ export function RefreshButton() {
     <Button
       variant="outline"
       size="sm"
+      className="min-h-11 md:min-h-8"
       disabled={pending}
       onClick={() => startTransition(() => router.refresh())}
     >

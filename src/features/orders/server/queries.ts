@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { adminRead } from "@/lib/api/admin";
 import { partnerLink } from "@/lib/partner-link";
-import type { OrderView, Paged, Partner } from "@/lib/api/types";
+import type { OrderView, Paged, Partner, RefundNeededItem } from "@/lib/api/types";
 import { HISTORY_PAGE_SIZE, REAL_STATUSES, UNPAID_STATUSES } from "../constants";
 import type { HistoryParams } from "../schemas";
 
@@ -23,6 +23,11 @@ export async function getOrderHistory(p: HistoryParams): Promise<Paged<OrderView
     page: p.page,
     pageSize: HISTORY_PAGE_SIZE,
   });
+}
+
+export async function getRefundsNeeded(): Promise<RefundNeededItem[]> {
+  const { items } = await adminRead<{ items: RefundNeededItem[] }>("/admin/refunds/needed");
+  return items;
 }
 
 export async function getOrder(id: string): Promise<OrderView> {

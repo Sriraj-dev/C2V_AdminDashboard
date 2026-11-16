@@ -27,6 +27,12 @@ describe("orders queries", () => {
     expect(await getActiveOrders()).toEqual([{ id: "1" }]);
     expect(calls[0]?.path).toBe("/admin/orders/active");
   });
+  it("getRefundsNeeded reads /admin/refunds/needed and unwraps items", async () => {
+    result = { items: [{ id: "r1", refundReason: "paid_after_expiry" }] };
+    const { getRefundsNeeded } = await load();
+    expect(await getRefundsNeeded()).toEqual([{ id: "r1", refundReason: "paid_after_expiry" }]);
+    expect(calls[0]?.path).toBe("/admin/refunds/needed");
+  });
   it("getOrderHistory defaults to real statuses", async () => {
     result = { items: [], page: 1, pageSize: 25, total: 0 };
     const { getOrderHistory } = await load();

@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/lib/api/types";
+import type { OrderStatus, RefundNeededItem } from "@/lib/api/types";
 
 export const STATUS_LABEL: Record<OrderStatus, string> = {
   payment_pending: "Payment pending",
@@ -39,3 +39,8 @@ export const ALL_STATUSES: readonly OrderStatus[] = [...REAL_STATUSES, ...UNPAID
 export type OrderAction = "assign" | "reassign" | "out_for_delivery" | "delivered" | "cancel" | "refund";
 
 export const HISTORY_PAGE_SIZE = 25;
+
+export const REFUND_REASON_LABEL: Record<RefundNeededItem["refundReason"], string> = {
+  cancelled_after_payment: "Cancelled after payment",
+  paid_after_expiry: "Paid after link expired",
+};
