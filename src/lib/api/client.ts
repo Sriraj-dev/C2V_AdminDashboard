@@ -1,4 +1,5 @@
 import "server-only";
+import { unstable_rethrow } from "next/navigation";
 import { serverEnv } from "@/lib/env";
 
 export type ApiError = {
@@ -52,7 +53,8 @@ export async function apiRequest<T>(path: string, opts: RequestOptions = {}): Pr
       cache: "no-store",
       signal: AbortSignal.timeout(10_000),
     });
-  } catch {
+  } catch (e) {
+    unstable_rethrow(e);
     return { ok: false, error: { ...NETWORK_ERROR } };
   }
 

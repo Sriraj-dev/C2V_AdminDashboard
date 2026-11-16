@@ -65,7 +65,7 @@ describe("adminRead", () => {
 
 describe("adminWrite", () => {
   it("redirects to /login?expired=1 with no cookie, without calling fetch", async () => {
-    const jar = mockNextHeaders();
+    const { jar } = mockNextHeaders();
     const { adminWrite } = await import("./admin");
     await expect(adminWrite("/admin/x", { body: {} })).rejects.toThrow("NEXT_REDIRECT:/login?expired=1");
     expect(jar.delete).toHaveBeenCalledWith("c2v_session");
@@ -73,7 +73,7 @@ describe("adminWrite", () => {
   });
 
   it("on 401 clears the cookie then redirects to /login?expired=1", async () => {
-    const jar = mockNextHeaders({ c2v_session: "tok" });
+    const { jar } = mockNextHeaders({ c2v_session: "tok" });
     fetchMock.mockResolvedValue(json(401, { error: { code: "unauthorized", message: "no" } }));
     const { adminWrite } = await import("./admin");
     await expect(adminWrite("/admin/x", { method: "POST" })).rejects.toThrow("NEXT_REDIRECT:/login?expired=1");
@@ -89,7 +89,7 @@ describe("adminWrite", () => {
   });
 
   it("returns the error result on 409 without redirecting", async () => {
-    const jar = mockNextHeaders({ c2v_session: "tok" });
+    const { jar } = mockNextHeaders({ c2v_session: "tok" });
     fetchMock.mockResolvedValue(json(409, { error: { code: "invalid_transition", message: "m" } }));
     const { adminWrite } = await import("./admin");
     expect(await adminWrite("/admin/x", { method: "POST" })).toEqual({

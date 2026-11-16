@@ -6,11 +6,19 @@ export type MockCookieJar = {
   delete: ReturnType<typeof vi.fn<(name: string) => void>>;
 };
 
+export type NextMocks = {
+  jar: MockCookieJar;
+  redirect: ReturnType<typeof vi.fn<(url: string) => never>>;
+  notFound: ReturnType<typeof vi.fn<() => never>>;
+  revalidatePath: ReturnType<typeof vi.fn>;
+  revalidateTag: ReturnType<typeof vi.fn>;
+};
+
 /**
- * Mocks `next/headers` (in-memory cookie jar) and `next/navigation` (redirect and notFound throw).
+ * Mocks `next/headers` (in-memory cookie jar), `next/navigation` (redirect and notFound throw) and `next/cache`.
  * Call it in a test, then dynamically import the module under test (after `vi.resetModules()`).
  */
-export function mockNextHeaders(initial: Record<string, string> = {}): MockCookieJar {
+export function mockNextHeaders(initial: Record<string, string> = {}): NextMocks {
   const store = new Map<string, string>(Object.entries(initial));
   const jar: MockCookieJar = {
     get: vi.fn((name: string) => {
@@ -24,14 +32,16 @@ export function mockNextHeaders(initial: Record<string, string> = {}): MockCooki
       store.delete(name);
     }),
   };
+  const redirect = vi.fn((url: string): never => {
+    throw new Error(`NEXT_REDIRECT:${url}`);
+  });
+  const notFound = vi.fn((): never => {
+    throw new Error("NEXT_NOT_FOUND");
+  });
+  const revalidatePath = vi.fn();
+  const revalidateTag = vi.fn();
   vi.doMock("next/headers", () => ({ cookies: async () => jar }));
-  vi.doMock("next/navigation", () => ({
-    redirect: (url: string): never => {
-      throw new Error(`NEXT_REDIRECT:${url}`);
-    },
-    notFound: (): never => {
-      throw new Error("NEXT_NOT_FOUND");
-    },
-  }));
-  return jar;
+  vi.doMock("next/navigation", () => ({ redirect, notFound, unstable_rethrow: vi.fn() }));
+  vi.doMock("next/cache", () => ({ revalidatePath, revalidateTag }));
+  return { jar, redirect, notFound, revalidatePath, revalidateTag };
 }

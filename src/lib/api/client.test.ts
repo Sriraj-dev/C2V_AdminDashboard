@@ -1,10 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetServerEnvForTests } from "@/lib/env";
 import { apiRequest } from "./client";
 
 const fetchMock = vi.fn();
 const call = (i: number): any[] => fetchMock.mock.calls[i]!; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 beforeEach(() => {
+  resetServerEnvForTests();
   vi.stubEnv("C2V_API_URL", "http://localhost:8080");
   vi.stubEnv("PUBLIC_APP_URL", "http://localhost:3000");
   vi.stubGlobal("fetch", fetchMock);

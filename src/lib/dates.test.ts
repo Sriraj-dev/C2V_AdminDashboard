@@ -10,6 +10,7 @@ describe("dates", () => {
     expect(formatDeliveryDate("2026-11-18")).toBe("Wed, 18 Nov");
     expect(formatDateTime("2026-11-14T06:15:03.000Z")).toBe("14 Nov, 11:45 am");
     expect(formatDateTime("2026-11-14T10:00:00.000Z")).toBe("14 Nov, 3:30 pm");
+    expect(formatDateTime("2026-11-14T18:35:00.000Z")).toBe("15 Nov, 12:05 am");
   });
   it("names weekdays", () => {
     expect(weekdayName(0)).toBe("Sunday");
