@@ -6,7 +6,9 @@ description: Folder structure, layering and coding conventions for the C2V Admin
 # C2V Admin Dashboard — Project Structure & Conventions
 
 Admin dashboard for C2V, a multi-tenant WhatsApp commerce product (first tenant: NutriFarm Eggs).
-The vendor manages orders, deliveries, subscriptions, customers, payments, catalogue and chats.
+The vendor manages orders, deliveries, refunds, delivery partners, customers, catalogue, delivery areas,
+settings and chats. Subscriptions are on hold: build no subscriptions UI until the user says so.
+Project facts and decisions live in `CLAUDE.md` and `docs/dashboard-brief.md`; they win over this skill.
 
 Stack: Next.js (App Router, latest stable), TypeScript strict, Tailwind, shadcn/ui, zod.
 Companion skills: `shadcn` (UI components), `vercel-react-best-practices` (performance),
@@ -18,12 +20,13 @@ Companion skills: `shadcn` (UI components), `vercel-react-best-practices` (perfo
 src/
   app/                          # ROUTES ONLY — thin files that compose features
     (auth)/login/page.tsx
+    (partner)/p/[token]/page.tsx  # delivery partner private link (no login, token-scoped)
     (dashboard)/
       layout.tsx                # sidebar + header shell
       page.tsx                  # overview / today's deliveries
       orders/page.tsx
       orders/[orderId]/page.tsx
-      subscriptions/  customers/  payments/  products/
+      refunds/  customers/  products/
       pincodes/  delivery-partners/  chats/  settings/
     api/                        # route handlers only when a real HTTP endpoint is needed
   features/                     # ALL business UI + logic, one folder per domain
@@ -37,14 +40,14 @@ src/
       constants.ts              # status labels, transitions, filters
       utils.ts                  # pure helpers for this feature only
       index.ts                  # public API of the feature (what other layers may import)
-    subscriptions/ customers/ payments/ products/ pincodes/
+    refunds/ customers/ products/ pincodes/ settings/
     delivery-partners/ chats/ auth/ dashboard/
   components/
     ui/                         # shadcn-generated primitives — do not hand-edit beyond styling
     layout/                     # app-sidebar, site-header, page-header, breadcrumbs
     shared/                     # generic, domain-free: data-table, empty-state, confirm-dialog
   lib/
-    api/ or db/                 # single data-access client (see §4)
+    api/                        # the single data-access client: the bot's admin API (see §4)
     auth.ts                     # session helpers
     env.ts                      # zod-validated env (server) — never read process.env elsewhere
     format.ts                   # money (paise → ₹), dates (Asia/Kolkata), phone
@@ -92,21 +95,24 @@ app  →  features  →  components/shared, components/ui, lib, hooks, config
 
 ## 4. Data access
 
-- All reads/writes go through one client in `lib/` (`lib/api` for the C2V backend HTTP API, or
-  `lib/db` if the dashboard talks to Postgres directly — pick one per project and stay consistent).
+- All reads/writes go through one client, `lib/api`, which calls the bot server's `/admin/*` and `/partner/:token/*`
+  endpoints (contract: `docs/admin-api.md`). There is no `lib/db`; this repo never connects to Postgres.
+- Business rules are never re-implemented here: status transitions, the delivered WhatsApp template,
+  Cashfree refunds and the product limit are enforced by the API; the UI may mirror them only to hide buttons.
+- The schema is owned by the bot repo's drizzle migrations; this repo never creates or alters tables.
 - Only `features/*/server/*` call that client. Components never call it, and never `fetch` the
   backend directly.
-- Every query is scoped by `tenantId` from the session. Never trust a tenant id from the client.
+- The tenant comes from the API session (bearer token in an httpOnly cookie). Never send a tenant id to the API.
 - Money is **integer paise** end to end; convert to rupees only for display via `lib/format.ts`.
 - Dates are stored UTC and displayed in **Asia/Kolkata**.
-- Fetch incrementally (pagination, filtered queries) — the database is on a free tier with limited
-  egress. Never load whole tables.
+- Fetch incrementally (the API's `page`/`pageSize` and filters) — the database is on a free tier with limited
+  egress. Never load whole lists.
 
 ## 5. Domain vocabulary (keep names identical to the backend)
 
 - Order statuses: `payment_pending`, `confirmed`, `assigned`, `out_for_delivery`, `delivered`,
   `cancelled`, `payment_failed`, `expired`. Only `confirmed` onward are "real" orders.
-- Order numbers look like `NF-1042` (tenant prefix + number).
+- Order codes look like `NF-7K3QX9` (tenant prefix + 6 random characters, not sequential).
 - Status transitions and their labels/colours live in `features/orders/constants.ts` — one source
   of truth, never re-declared in components.
 
@@ -134,6 +140,7 @@ app  →  features  →  components/shared, components/ui, lib, hooks, config
 - [ ] New code is in the right layer (§1) and respects import rules (§2).
 - [ ] `"use client"` only where needed; data fetched on the server.
 - [ ] Inputs validated with zod; actions check session + tenant.
+- [ ] Tenant-isolation tests: another tenant's ids return "not found" for reads and writes.
 - [ ] Money in paise, dates in IST for display.
 - [ ] Loading, empty and error states handled.
 - [ ] Type check and lint pass.
