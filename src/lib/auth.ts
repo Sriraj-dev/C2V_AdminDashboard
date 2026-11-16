@@ -1,7 +1,8 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { SESSION_COOKIE } from "./session-cookie";
 
-export const SESSION_COOKIE = "c2v_session";
+export { SESSION_COOKIE };
 
 export async function getSessionToken(): Promise<string | null> {
   const jar = await cookies();

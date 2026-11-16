@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
-// Cookie name duplicated from lib/auth (that module is server-only); keep in sync.
-const SESSION_COOKIE = "c2v_session";
+import { SESSION_COOKIE } from "@/lib/session-cookie";
+
 const PUBLIC_PATHS = ["/session-expired"];
 
 function isPublic(pathname: string): boolean {
@@ -14,7 +14,8 @@ export function proxy(request: NextRequest) {
   const hasSession = request.cookies.has(SESSION_COOKIE);
 
   if (pathname === "/login") {
-    if (hasSession) return NextResponse.redirect(new URL("/", request.url));
+    // Only GET: Server Action POSTs to /login must pass through.
+    if (hasSession && request.method === "GET") return NextResponse.redirect(new URL("/", request.url));
     return NextResponse.next();
   }
   if (isPublic(pathname)) return NextResponse.next();

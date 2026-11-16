@@ -12,6 +12,8 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Temporary: remove with src/test/zstd-polyfill.cjs when local Node >= 22.15 (jsdom 31 needs zlib zstd).
+    execArgv: ["--require", path.resolve(import.meta.dirname, "src/test/zstd-polyfill.cjs")],
     setupFiles: ["src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
   },

@@ -31,11 +31,17 @@ describe("proxy", () => {
     expect(proxy(req("/session-expired", "tok")).headers.get("location")).toBeNull();
     expect(proxy(req("/p/abc", "tok")).headers.get("location")).toBeNull();
   });
-  it("matcher excludes _next/static, _next/image and favicon", () => {
+  it("does not redirect a POST to /login even with a cookie", () => {
+    const res = proxy(new NextRequest("http://localhost:3000/login", { method: "POST", headers: { cookie: "c2v_session=tok" } }));
+    expect(res.headers.get("location")).toBeNull();
+  });
+  it("matcher excludes static assets and favicon but not app routes", () => {
     const m = config.matcher as string[];
     expect(m).toHaveLength(1);
-    expect(m[0]).toContain("_next/static");
-    expect(m[0]).toContain("_next/image");
-    expect(m[0]).toContain("favicon.ico");
+    const re = new RegExp("^" + m[0] + "$");
+    expect(re.test("/_next/static/x.js")).toBe(false);
+    expect(re.test("/favicon.ico")).toBe(false);
+    expect(re.test("/orders")).toBe(true);
+    expect(re.test("/p/abc")).toBe(true);
   });
 });
