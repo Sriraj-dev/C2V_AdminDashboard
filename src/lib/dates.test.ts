@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, formatDate, formatDateTime, formatDeliveryDate, todayInIST, weekdayName, WEEKDAYS } from "./dates";
+import { addDays, formatDate, formatRelative, formatDateTime, formatDeliveryDate, todayInIST, weekdayName, WEEKDAYS } from "./dates";
 
 describe("dates", () => {
   it("computes today in IST", () => {
@@ -36,5 +36,13 @@ describe("isValidYmd", () => {
 
   it("formats a date only, in IST", () => {
     expect(formatDate("2026-03-05T20:00:00Z")).toBe("6 Mar 2026");
+  });
+  it("formats relative times", () => {
+    const now = new Date("2026-11-16T12:00:00Z");
+    expect(formatRelative("2026-11-16T11:59:30Z", now)).toBe("now");
+    expect(formatRelative("2026-11-16T11:55:00Z", now)).toBe("5m");
+    expect(formatRelative("2026-11-16T09:00:00Z", now)).toBe("3h");
+    expect(formatRelative("2026-11-14T18:35:00Z", now)).toBe("15 Nov");
+    expect(formatRelative("2026-11-17T12:00:00Z", now)).toBe("now");
   });
 });

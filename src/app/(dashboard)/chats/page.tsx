@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export const metadata: Metadata = { title: "Chats" };
 
 export default function Page() {
-  return <PageHeader title="Chats" />;
+  return <EmptyState title="Select a conversation" description="Pick a customer on the left to read and reply." />;
 }

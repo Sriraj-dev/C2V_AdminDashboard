@@ -81,3 +81,16 @@ export function isValidYmd(s: string): boolean {
   const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
   return d.toISOString().slice(0, 10) === s;
 }
+
+const shortDateFmt = new Intl.DateTimeFormat("en-IN", { timeZone: TZ, day: "numeric", month: "short" });
+
+/** Compact age for lists: "now", "5m", "3h", then a short IST date like "5 Mar". */
+export function formatRelative(iso: string, now: Date = new Date()): string {
+  const diff = now.getTime() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  if (mins < 1440) return `${Math.floor(mins / 60)}h`;
+  const p = parts(shortDateFmt, new Date(iso));
+  return `${p.day} ${p.month}`;
+}
