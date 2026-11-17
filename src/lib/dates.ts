@@ -48,6 +48,14 @@ export function formatDateTime(iso: string): string {
   return `${p.day} ${p.month}, ${p.hour}:${p.minute} ${(p.dayPeriod ?? "").toLowerCase()}`;
 }
 
+const dateFmt = new Intl.DateTimeFormat("en-IN", { timeZone: TZ, day: "numeric", month: "short", year: "numeric" });
+
+/** Date only, in IST, e.g. "5 Mar 2026". */
+export function formatDate(iso: string): string {
+  const p = parts(dateFmt, new Date(iso));
+  return `${p.day} ${p.month} ${p.year}`;
+}
+
 const deliveryFmt = new Intl.DateTimeFormat("en-IN", {
   timeZone: "UTC",
   weekday: "short",

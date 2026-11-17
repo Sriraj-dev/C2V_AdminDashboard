@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, formatDateTime, formatDeliveryDate, todayInIST, weekdayName, WEEKDAYS } from "./dates";
+import { addDays, formatDate, formatDateTime, formatDeliveryDate, todayInIST, weekdayName, WEEKDAYS } from "./dates";
 
 describe("dates", () => {
   it("computes today in IST", () => {
@@ -32,5 +32,9 @@ describe("isValidYmd", () => {
     expect(isValidYmd("2026-13-01")).toBe(false);
     expect(isValidYmd("2026-1-1")).toBe(false);
     expect(isValidYmd("")).toBe(false);
+  });
+
+  it("formats a date only, in IST", () => {
+    expect(formatDate("2026-03-05T20:00:00Z")).toBe("6 Mar 2026");
   });
 });
