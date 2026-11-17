@@ -9,14 +9,15 @@ import { StatusBadge } from "./status-badge";
 
 export function OrderCard({ order, selection }: { order: OrderView; selection?: Selection }) {
   return (
-    <li className="flex items-start gap-2">
+    <li className="flex items-start gap-1">
       {selection && isAssignable(order) && (
-        <Checkbox
-          aria-label={`Select ${order.orderCode}`}
-          className="mt-3.5 ml-1"
-          checked={selection.selected.has(order.id)}
-          onCheckedChange={() => selection.toggle(order.id)}
-        />
+        <label className="flex size-11 shrink-0 cursor-pointer items-center justify-center">
+          <Checkbox
+            aria-label={`Select ${order.orderCode}`}
+            checked={selection.selected.has(order.id)}
+            onCheckedChange={() => selection.toggle(order.id)}
+          />
+        </label>
       )}
       <Link
         href={`/orders/${order.id}`}

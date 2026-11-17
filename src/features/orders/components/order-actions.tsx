@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import type { ActionResult } from "@/lib/action-result";
 import type { OrderView } from "@/lib/api/types";
@@ -56,18 +57,22 @@ export function OrderActions({ order, partners }: { order: OrderView; partners: 
         </Button>
       )}
       {actions.includes("delivered") && (
-        <Button
-          className="min-h-11 md:min-h-8"
-          disabled={busy}
-          onClick={() =>
+        <ConfirmDialog
+          trigger={
+            <Button className="min-h-11 md:min-h-8" disabled={busy}>
+              Delivered
+            </Button>
+          }
+          title={`Mark ${order.orderCode} delivered?`}
+          description="The customer gets a WhatsApp message."
+          confirmLabel="Delivered"
+          onConfirm={() =>
             run(
               () => markDelivered(order.id),
               (d) => (d.notified ? toast.success("Marked delivered.") : toast.warning(DELIVERED_WARNING)),
             )
           }
-        >
-          Delivered
-        </Button>
+        />
       )}
       {actions.includes("refund") && <RefundButton order={order} />}
       <CancelOrderFlow order={order} canCancel={actions.includes("cancel")} />

@@ -36,7 +36,8 @@ function interactiveView(i: Obj): MessageView | undefined {
       return { kind: "form", label: "Order form submitted" };
     case "button":
     case "list":
-    case "flow": {
+    case "flow":
+    case "cta_url": {
       const body = str(obj(i.body)?.text);
       if (!body) return undefined;
       const action = obj(i.action);
@@ -46,8 +47,11 @@ function interactiveView(i: Obj): MessageView | undefined {
       } else if (i.type === "list") {
         const rows = arr(action?.sections).flatMap((s) => arr(obj(s)?.rows).map((r) => obj(r)?.title));
         options = strings([action?.button, ...rows]);
-      } else {
+      } else if (i.type === "flow") {
         options = strings([obj(action?.parameters)?.flow_cta]);
+      } else {
+        // A link button: show its label only; the dashboard never opens the link.
+        options = strings([obj(action?.parameters)?.display_text]);
       }
       const header = str(obj(i.header)?.text);
       const footer = str(obj(i.footer)?.text);
@@ -107,4 +111,23 @@ export function toMessageView(m: ChatMessage): MessageView {
     view = undefined;
   }
   return view ?? { kind: "fallback", body: m.text ?? `[${m.type}]` };
+}
+
+export type TextSpan = { text: string; bold?: true; italic?: true };
+
+// WhatsApp marks *bold* and _italic_ at word edges, with no space just inside the markers, on one line.
+const MARKUP = /(?<!\w)\*([^*\s](?:[^*\n]*[^*\s])?)\*(?!\w)|(?<!\w)_([^_\s](?:[^_\n]*[^_\s])?)_(?!\w)/g;
+
+/** Splits WhatsApp text into plain, bold and italic runs (rendered as text nodes, never HTML). */
+export function whatsappSpans(text: string): TextSpan[] {
+  const spans: TextSpan[] = [];
+  let at = 0;
+  for (const m of text.matchAll(MARKUP)) {
+    if (m.index > at) spans.push({ text: text.slice(at, m.index) });
+    if (m[1] !== undefined) spans.push({ text: m[1], bold: true });
+    else spans.push({ text: m[2] ?? "", italic: true });
+    at = m.index + m[0].length;
+  }
+  if (at < text.length) spans.push({ text: text.slice(at) });
+  return spans;
 }

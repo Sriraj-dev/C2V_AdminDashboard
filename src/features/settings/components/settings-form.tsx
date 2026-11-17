@@ -5,24 +5,18 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { FieldError } from "@/components/shared/field-error";
+import { FormError } from "@/components/shared/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Settings } from "@/lib/api/types";
+import { applyFieldErrors } from "@/lib/form-errors";
 import { settingsFormSchema, type SettingsFormInput, type SettingsFormValues } from "../schemas";
 import { updateSettings } from "../server/actions";
 import { settingsChanges, settingsToFormInput } from "../utils";
 
 const FIELDS = ["supportPhone", "welcomeImageUrl", "deliveryFee", "minOrder"] as const;
-
-function FieldError({ id, message }: { id: string; message?: string }) {
-  if (!message) return null;
-  return (
-    <p id={id} className="text-sm text-destructive">
-      {message}
-    </p>
-  );
-}
 
 export function SettingsForm({ settings }: { settings: Settings }) {
   const router = useRouter();
@@ -48,14 +42,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
     }
     const result = await updateSettings(changed);
     if (!result.ok) {
-      setFormError(result.error.message);
-      let unmatched: string | null = null;
-      for (const [field, message] of Object.entries(result.error.fieldErrors ?? {})) {
-        if ((FIELDS as readonly string[]).includes(field))
-          setError(field as (typeof FIELDS)[number], { message });
-        else unmatched ??= message;
-      }
-      if (unmatched) setFormError(unmatched);
+      setFormError(applyFieldErrors(result.error, FIELDS, setError));
       return;
     }
     toast.success("Saved. Applies to the next order form.");
@@ -63,12 +50,8 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-      {formError && Object.keys(errors).length === 0 && (
-        <p role="alert" className="text-sm text-destructive">
-          {formError}
-        </p>
-      )}
+    <form onSubmit={handleSubmit(onSubmit, () => setFormError(null))} noValidate className="flex flex-col gap-4">
+      <FormError message={formError} />
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="settings-phone">Support phone</Label>
         <Input

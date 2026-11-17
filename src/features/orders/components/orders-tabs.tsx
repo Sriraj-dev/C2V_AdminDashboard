@@ -17,7 +17,7 @@ export function OrdersTabs({ view }: { view: OrdersView }) {
           href={`/orders?view=${t.view}`}
           aria-current={view === t.view ? "page" : undefined}
           className={cn(
-            "-mb-px border-b-2 px-3 py-2 text-sm font-medium",
+            "-mb-px flex min-h-11 items-center border-b-2 px-3 text-sm font-medium md:min-h-9",
             view === t.view ? "border-primary text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
           )}
         >

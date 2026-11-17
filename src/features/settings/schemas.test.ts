@@ -51,4 +51,9 @@ describe("changePasswordSchema", () => {
     expect(changePasswordSchema.safeParse({ ...ok, newPassword: "short", confirmPassword: "short" }).success).toBe(false);
     expect(changePasswordSchema.safeParse({ ...ok, currentPassword: "" }).success).toBe(false);
   });
+  it("caps confirmPassword like newPassword", () => {
+    const r = changePasswordSchema.safeParse({ ...ok, confirmPassword: "x".repeat(129) });
+    expect(r.success).toBe(false);
+    expect(r.error!.issues.some((i) => i.path[0] === "confirmPassword" && i.message === "Use 128 characters or fewer")).toBe(true);
+  });
 });

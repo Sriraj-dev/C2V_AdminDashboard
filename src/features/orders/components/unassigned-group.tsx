@@ -40,18 +40,19 @@ export function UnassignedGroup({ orders, partners }: { orders: OrderView[]; par
       </header>
       <ul className="flex flex-col gap-1">
         {orders.map((o) => (
-          <li key={o.id} className="flex items-center gap-2">
-            <Checkbox
-              aria-label={`Select ${o.orderCode}`}
-              className="ml-1"
-              checked={selected.has(o.id)}
-              onCheckedChange={() => toggle(o.id)}
-            />
+          <li key={o.id} className="flex items-center gap-1">
+            <label className="flex size-11 shrink-0 cursor-pointer items-center justify-center md:size-9">
+              <Checkbox
+                aria-label={`Select ${o.orderCode}`}
+                checked={selected.has(o.id)}
+                onCheckedChange={() => toggle(o.id)}
+              />
+            </label>
             <Link
               href={`/orders/${o.id}`}
               className="flex min-h-11 min-w-0 flex-1 items-center justify-between gap-2 rounded-md border px-3 text-sm hover:bg-muted/50 md:min-h-9"
             >
-              <span className="font-medium">{o.orderCode}</span>
+              <span className="shrink-0 font-medium whitespace-nowrap">{o.orderCode}</span>
               <span className="min-w-0 flex-1 truncate">{customerName(o)}</span>
               <span className="text-muted-foreground">{o.pincode}</span>
               <StatusBadge status={o.status} />

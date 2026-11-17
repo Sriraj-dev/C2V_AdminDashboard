@@ -76,7 +76,7 @@ export const changePasswordSchema = z
       .string()
       .min(10, "Use at least 10 characters")
       .max(128, "Use 128 characters or fewer"),
-    confirmPassword: z.string(),
+    confirmPassword: z.string().max(128, "Use 128 characters or fewer"),
   })
   .strict()
   .refine((v) => v.newPassword === v.confirmPassword, {

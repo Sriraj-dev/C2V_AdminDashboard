@@ -2,9 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { FieldError } from "@/components/shared/field-error";
+import { FormError } from "@/components/shared/form-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,10 +19,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { applyFieldErrors } from "@/lib/form-errors";
 import { changedFields, phoneTail } from "../utils";
 import { partnerFormSchema, type PartnerForm } from "../schemas";
 import { createPartner, updatePartner } from "../server/actions";
 import type { PartnerRow } from "../types";
+
+const FIELDS = ["name", "phone"] as const;
 
 /** Add (no `partner`) or edit a delivery partner. */
 export function PartnerFormDialog({
@@ -33,6 +38,7 @@ export function PartnerFormDialog({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
   const {
     register,
     handleSubmit,
@@ -62,19 +68,14 @@ export function PartnerFormDialog({
       result = await createPartner(values);
     }
     if (!result.ok) {
-      setFormError(result.error.message);
-      for (const [field, message] of Object.entries(
-        result.error.fieldErrors ?? {},
-      )) {
-        if (field === "name" || field === "phone") setError(field, { message });
-      }
+      setFormError(applyFieldErrors(result.error, FIELDS, setError));
       return;
     }
     toast.success(
       partner ? "Partner updated." : `${result.data.partner.name} added.`,
     );
     setOpen(false);
-    router.refresh();
+    startTransition(() => router.refresh());
   }
 
   return (
@@ -95,7 +96,7 @@ export function PartnerFormDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <form
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, () => setFormError(null))}
           noValidate
           className="flex flex-col gap-4"
         >
@@ -109,11 +110,7 @@ export function PartnerFormDialog({
                 : "A private delivery link is created for them."}
             </DialogDescription>
           </DialogHeader>
-          {formError && !errors.name && !errors.phone && (
-            <p role="alert" className="text-sm text-destructive">
-              {formError}
-            </p>
-          )}
+          <FormError message={formError} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="partner-name">Name</Label>
             <Input
@@ -123,11 +120,7 @@ export function PartnerFormDialog({
               aria-describedby={errors.name ? "partner-name-err" : undefined}
               {...register("name")}
             />
-            {errors.name && (
-              <p id="partner-name-err" className="text-sm text-destructive">
-                {errors.name.message}
-              </p>
-            )}
+            <FieldError id="partner-name-err" message={errors.name?.message} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="partner-phone">Mobile number</Label>
@@ -141,11 +134,7 @@ export function PartnerFormDialog({
               aria-describedby={errors.phone ? "partner-phone-err" : undefined}
               {...register("phone")}
             />
-            {errors.phone && (
-              <p id="partner-phone-err" className="text-sm text-destructive">
-                {errors.phone.message}
-              </p>
-            )}
+            <FieldError id="partner-phone-err" message={errors.phone?.message} />
           </div>
           <DialogFooter>
             <Button

@@ -2,7 +2,7 @@ import { MapPin, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { formatDate } from "@/lib/dates";
-import { formatPhone, telHref } from "@/lib/format";
+import { formatPhone, nearLandmark, telHref } from "@/lib/format";
 import type { CustomerView } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { displayName, mapHref } from "../utils";
@@ -54,7 +54,7 @@ export function CustomerProfile({ customer }: { customer: CustomerView }) {
           <div className="text-sm">
             <p className="font-medium">{addr.name}</p>
             <p>{addr.line1}</p>
-            {addr.landmark && <p>Near {addr.landmark}</p>}
+            {addr.landmark && <p>{nearLandmark(addr.landmark)}</p>}
             <p>{addr.pincode}</p>
             {addr.phone && (
               <a href={telHref(addr.phone)} className="inline-flex min-h-11 items-center underline underline-offset-2 md:min-h-0">

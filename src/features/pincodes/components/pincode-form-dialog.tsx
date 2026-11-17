@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import { Controller, useForm, type DefaultValues } from "react-hook-form";
 import { toast } from "sonner";
+import { FieldError } from "@/components/shared/field-error";
+import { FormError } from "@/components/shared/form-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,6 +29,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import type { Pincode } from "@/lib/api/types";
 import { WEEKDAYS } from "@/lib/dates";
+import { applyFieldErrors } from "@/lib/form-errors";
 import {
   pincodeFormSchema,
   type PincodeFormInput,
@@ -85,14 +88,7 @@ export function PincodeFormDialog({
       result = await createPincode(values);
     }
     if (!result.ok) {
-      setFormError(result.error.message);
-      let unmatched: string | null = null;
-      for (const [field, message] of Object.entries(result.error.fieldErrors ?? {})) {
-        if ((FIELDS as readonly string[]).includes(field))
-          setError(field as (typeof FIELDS)[number], { message });
-        else unmatched ??= message;
-      }
-      if (unmatched) setFormError(unmatched);
+      setFormError(applyFieldErrors(result.error, FIELDS, setError));
       return;
     }
     toast.success(pincode ? "Pincode updated." : `${result.data.pincode.pincode} added.`);
@@ -115,18 +111,14 @@ export function PincodeFormDialog({
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit, () => setFormError(null))} noValidate className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>{pincode ? `Edit ${pincode.pincode}` : "Add pincode"}</DialogTitle>
             <DialogDescription>
               Orders to this pincode go out on the next chosen weekday.
             </DialogDescription>
           </DialogHeader>
-          {formError && Object.keys(errors).length === 0 && (
-            <p role="alert" className="text-sm text-destructive">
-              {formError}
-            </p>
-          )}
+          <FormError message={formError} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pincode-code">Pincode</Label>
             <Input
@@ -145,11 +137,7 @@ export function PincodeFormDialog({
                 Pincodes can&apos;t be changed; add a new one.
               </p>
             )}
-            {errors.pincode && (
-              <p id="pincode-code-err" className="text-sm text-destructive">
-                {errors.pincode.message}
-              </p>
-            )}
+            <FieldError id="pincode-code-err" message={errors.pincode?.message} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pincode-weekday">Delivery day</Label>
@@ -165,6 +153,7 @@ export function PincodeFormDialog({
                     id="pincode-weekday"
                     className="min-h-11 w-full md:min-h-8"
                     aria-invalid={!!errors.deliveryWeekday}
+                    aria-describedby={errors.deliveryWeekday ? "pincode-weekday-err" : undefined}
                   >
                     <SelectValue placeholder="Choose a day" />
                   </SelectTrigger>
@@ -178,9 +167,7 @@ export function PincodeFormDialog({
                 </Select>
               )}
             />
-            {errors.deliveryWeekday && (
-              <p className="text-sm text-destructive">{errors.deliveryWeekday.message}</p>
-            )}
+            <FieldError id="pincode-weekday-err" message={errors.deliveryWeekday?.message} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="pincode-note">Note (optional)</Label>
@@ -191,11 +178,7 @@ export function PincodeFormDialog({
               aria-describedby={errors.note ? "pincode-note-err" : undefined}
               {...register("note")}
             />
-            {errors.note && (
-              <p id="pincode-note-err" className="text-sm text-destructive">
-                {errors.note.message}
-              </p>
-            )}
+            <FieldError id="pincode-note-err" message={errors.note?.message} />
           </div>
           <Controller
             control={control}

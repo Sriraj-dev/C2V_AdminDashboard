@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { RefreshButton } from "@/components/shared/refresh-button";
 import type { ChatCustomer, ChatMessage } from "@/lib/api/types";
 import { formatDate } from "@/lib/dates";
-import { customerLabel, istDay } from "../utils";
+import { customerLabel, customerSubtitle, istDay } from "../utils";
 import { AutoRefreshSwitch } from "./auto-refresh-switch";
 import { MessageBubble } from "./message-bubble";
 import { ReplyBox } from "./reply-box";
@@ -23,6 +23,7 @@ export function ChatThread({
 }) {
   const paneRef = useRef<HTMLDivElement>(null);
   const lastId = items.at(-1)?.id;
+  const subtitle = customerSubtitle(customer);
 
   useEffect(() => {
     const el = paneRef.current;
@@ -41,11 +42,11 @@ export function ChatThread({
             <ArrowLeft className="size-5" aria-hidden="true" />
           </Link>
           <div className="min-w-0">
-            <h2 className="truncate text-lg font-semibold">{customerLabel(customer)}</h2>
-            {customer.phone && <p className="text-sm text-muted-foreground">{customer.phone}</p>}
+            <h1 className="truncate text-lg font-semibold">{customerLabel(customer)}</h1>
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3">
           <AutoRefreshSwitch intervalMs={10_000} />
           <RefreshButton />
         </div>

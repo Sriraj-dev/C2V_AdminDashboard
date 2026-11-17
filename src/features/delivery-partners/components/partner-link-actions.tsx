@@ -2,7 +2,7 @@
 
 import { Link2, MessageCircle, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { CopyButton } from "@/components/shared/copy-button";
@@ -14,11 +14,13 @@ import { partnerShareText } from "../utils";
 
 export function PartnerLinkActions({ partner }: { partner: PartnerRow }) {
   const router = useRouter();
-  const [pending, setPending] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [refreshing, startTransition] = useTransition();
+  const pending = resetting || refreshing;
   const btn = "min-h-11 md:min-h-8";
 
   async function reset() {
-    setPending(true);
+    setResetting(true);
     try {
       const r = await resetPartnerLink(partner.id);
       if (r.ok)
@@ -28,11 +30,11 @@ export function PartnerLinkActions({ partner }: { partner: PartnerRow }) {
             : "Link created.",
         );
       else toast.error(r.error.message);
-      router.refresh();
+      startTransition(() => router.refresh());
     } catch {
       toast.error("Something went wrong. Try again.");
     } finally {
-      setPending(false);
+      setResetting(false);
     }
   }
 
@@ -75,7 +77,7 @@ export function PartnerLinkActions({ partner }: { partner: PartnerRow }) {
       )}
       <ConfirmDialog
         trigger={
-          <Button variant="outline" size="sm" className={btn}>
+          <Button variant="outline" size="sm" className={btn} disabled={pending}>
             <RotateCcw aria-hidden />
             Reset link
           </Button>

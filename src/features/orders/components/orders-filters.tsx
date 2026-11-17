@@ -2,7 +2,7 @@
 
 import { ChevronDown } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { useUrlSyncedText } from "@/hooks/use-url-synced-text";
 import type { OrderStatus } from "@/lib/api/types";
 import { ALL_STATUSES, REAL_STATUSES, STATUS_LABEL } from "../constants";
 
@@ -46,21 +47,7 @@ function DebouncedInput({
   onCommit,
   ...props
 }: { id: string; value: string; onCommit: (v: string) => void } & Omit<React.ComponentProps<typeof Input>, "value" | "onChange">) {
-  const [text, setText] = useState(value);
-  const [seen, setSeen] = useState(value);
-  if (value !== seen) {
-    setSeen(value);
-    setText(value);
-  }
-  const commit = useRef(onCommit);
-  useEffect(() => {
-    commit.current = onCommit;
-  });
-  useEffect(() => {
-    if (text === value) return;
-    const t = setTimeout(() => commit.current(text.trim()), 300);
-    return () => clearTimeout(t);
-  }, [text, value]);
+  const [text, setText] = useUrlSyncedText(value, onCommit);
   return <Input id={id} value={text} onChange={(e) => setText(e.target.value)} {...props} />;
 }
 

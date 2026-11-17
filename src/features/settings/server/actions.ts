@@ -42,6 +42,8 @@ export async function updateSettings(
   return { ok: true, data: { settings: result.data.settings } };
 }
 
+const WRONG_CURRENT_PASSWORD = "Current password is wrong.";
+
 /**
  * Calls apiRequest directly (not adminWrite): a wrong current password is a 401
  * `invalid_credentials` that must show a message, not end the session.
@@ -67,7 +69,9 @@ export async function changePassword(input: ChangePasswordInput): Promise<Action
     }
     const error = fromApiError(result.error);
     if (result.error.code === "invalid_credentials") {
-      error.fieldErrors = { currentPassword: result.error.message };
+      // The API's message says "username or password"; here only the current password can be wrong.
+      error.message = WRONG_CURRENT_PASSWORD;
+      error.fieldErrors = { currentPassword: WRONG_CURRENT_PASSWORD };
     }
     return { ok: false, error };
   }

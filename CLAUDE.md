@@ -4,8 +4,8 @@ Web dashboard where each C2V client's **vendor** runs their business: orders, de
 partners, refunds, catalogue, delivery areas, settings and customer chats. One dashboard serves **all
 tenants**. Each vendor sees only their own tenant. First tenant: **NutriFarm Eggs** (`nutrifarm`).
 
-**Status:** empty project. The backend API it uses is built (bot repo, branch `feat/admin-api`). Next: brainstorm
-with the user, settle the remaining open decisions (`docs/dashboard-brief.md` header and §8), write the plan, then build.
+**Status:** first release built; hosting pending. The backend API it uses is in the bot repo (branch `feat/admin-api`).
+Next: decide hosting and deploy (see `README.md`).
 
 ## Read first
 

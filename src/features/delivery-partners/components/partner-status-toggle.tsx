@@ -11,7 +11,9 @@ import type { PartnerRow } from "../types";
 export function PartnerStatusToggle({ partner }: { partner: PartnerRow }) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [pending, startTransition] = useTransition();
+  const [acting, startTransition] = useTransition();
+  const [refreshing, startRefresh] = useTransition();
+  const pending = acting || refreshing;
   const className = "min-h-11 md:min-h-8";
 
   async function run(active: boolean) {
@@ -23,7 +25,7 @@ export function PartnerStatusToggle({ partner }: { partner: PartnerRow }) {
           : `${partner.name} is deactivated.`,
       );
     else toast.error(r.error.message);
-    router.refresh();
+    startRefresh(() => router.refresh());
   }
 
   /** Direct-click path: ConfirmDialog has its own error handling, this one needs it here. */

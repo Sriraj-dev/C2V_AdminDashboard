@@ -1,7 +1,14 @@
 import type { ChatCustomer, ChatListItem } from "@/lib/api/types";
+import { formatPhone } from "@/lib/format";
 
+/** Title for a conversation: the WhatsApp name, else the formatted phone. */
 export function customerLabel(c: ChatCustomer): string {
-  return c.profileName?.trim() || c.phone || "Customer";
+  return c.profileName?.trim() || (c.phone ? formatPhone(c.phone) : "Customer");
+}
+
+/** Line under the title: the formatted phone, only when the title is the name (never repeated). */
+export function customerSubtitle(c: ChatCustomer): string | null {
+  return c.profileName?.trim() && c.phone ? formatPhone(c.phone) : null;
 }
 
 /** Same rule as the navigation badge: the customer spoke last and we can still answer. */

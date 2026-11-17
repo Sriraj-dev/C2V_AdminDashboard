@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ChatMessage } from "@/lib/api/types";
-import { toMessageView } from "./message-view";
+import { toMessageView, whatsappSpans } from "./message-view";
 
 function msg(direction: "in" | "out", type: string, payload: unknown, text: string | null = null): ChatMessage {
   return { id: "m1", direction, type, text, payload, createdAt: "2026-11-16T05:10:12.000Z" };
@@ -136,5 +136,38 @@ describe("toMessageView", () => {
       expect(() => toMessageView(msg("in", "interactive", p, "t"))).not.toThrow();
       expect(toMessageView(msg("in", "interactive", p, "t")).kind).toBe("fallback");
     }
+  });
+});
+
+describe("cta_url", () => {
+  it("shows the link button's label as an option, never the URL", () => {
+    const m = msg("out", "interactive", {
+      type: "interactive",
+      interactive: {
+        type: "cta_url",
+        body: { text: "Pay for order NF-7K3QX9" },
+        action: { name: "cta_url", parameters: { display_text: "Pay now", url: "https://pay.example/x" } },
+      },
+    });
+    expect(toMessageView(m)).toEqual({ kind: "interactive", body: "Pay for order NF-7K3QX9", options: ["Pay now"] });
+  });
+});
+
+describe("whatsappSpans", () => {
+  it("splits *bold* and _italic_ runs", () => {
+    expect(whatsappSpans("Total *₹180* _today_ ok")).toEqual([
+      { text: "Total " },
+      { text: "₹180", bold: true },
+      { text: " " },
+      { text: "today", italic: true },
+      { text: " ok" },
+    ]);
+  });
+  it("leaves unmatched or spaced markers as text", () => {
+    expect(whatsappSpans("2 * 3 * 4")).toEqual([{ text: "2 * 3 * 4" }]);
+    expect(whatsappSpans("*open")).toEqual([{ text: "*open" }]);
+    expect(whatsappSpans("snake_case_name")).toEqual([{ text: "snake_case_name" }]);
+    expect(whatsappSpans("(*a*)")).toEqual([{ text: "(" }, { text: "a", bold: true }, { text: ")" }]);
+    expect(whatsappSpans("")).toEqual([]);
   });
 });

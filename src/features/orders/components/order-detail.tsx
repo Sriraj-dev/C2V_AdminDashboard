@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/layout/page-header";
+import { RefreshButton } from "@/components/shared/refresh-button";
 import type { OrderView } from "@/lib/api/types";
 import { formatDeliveryDate } from "@/lib/dates";
 import { formatPhone, telHref } from "@/lib/format";
@@ -34,7 +35,12 @@ export function OrderDetail({ order, partners }: { order: OrderView; partners: P
       <PageHeader
         title={order.orderCode}
         description={`Delivery ${formatDeliveryDate(order.deliveryDate)}`}
-        actions={<StatusBadge status={order.status} />}
+        actions={
+          <>
+            <StatusBadge status={order.status} />
+            <RefreshButton />
+          </>
+        }
       />
 
       <OrderActions order={order} partners={partners} />

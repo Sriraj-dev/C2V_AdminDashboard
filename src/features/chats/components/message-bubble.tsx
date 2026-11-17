@@ -3,17 +3,24 @@ import { formatDateTime } from "@/lib/dates";
 import type { ChatMessage } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 import { toMessageView, type MessageView } from "../message-view";
+import { WaText } from "./wa-text";
 
 function Content({ view }: { view: MessageView }) {
   switch (view.kind) {
     case "text":
     case "fallback":
-      return <p className="whitespace-pre-wrap break-words">{view.body}</p>;
+      return (
+        <p className="whitespace-pre-wrap break-words">
+          <WaText text={view.body} />
+        </p>
+      );
     case "interactive":
       return (
         <div className="flex flex-col gap-1.5">
           {view.header && <p className="font-semibold break-words">{view.header}</p>}
-          <p className="whitespace-pre-wrap break-words">{view.body}</p>
+          <p className="whitespace-pre-wrap break-words">
+            <WaText text={view.body} />
+          </p>
           {view.footer && <p className="text-xs text-muted-foreground break-words">{view.footer}</p>}
           {view.options.length > 0 && (
             <ul className="flex flex-wrap gap-1.5 pt-1" aria-label="Options sent">
@@ -39,7 +46,11 @@ function Content({ view }: { view: MessageView }) {
           ) : (
             <p className="text-muted-foreground">[Image]</p>
           )}
-          {view.caption && <p className="whitespace-pre-wrap break-words">{view.caption}</p>}
+          {view.caption && (
+            <p className="whitespace-pre-wrap break-words">
+              <WaText text={view.caption} />
+            </p>
+          )}
         </div>
       );
     case "template":

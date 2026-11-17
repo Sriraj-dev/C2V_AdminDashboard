@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { FieldError } from "@/components/shared/field-error";
+import { FormError } from "@/components/shared/form-error";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { applyFieldErrors } from "@/lib/form-errors";
 import { changePasswordSchema, type ChangePasswordInput } from "../schemas";
 import { changePassword } from "../server/actions";
 
@@ -40,14 +43,7 @@ export function ChangePasswordForm() {
     setFormError(null);
     const result = await changePassword(getValues());
     if (!result.ok) {
-      setFormError(result.error.message);
-      let unmatched: string | null = null;
-      for (const [field, message] of Object.entries(result.error.fieldErrors ?? {})) {
-        if ((FIELDS as readonly string[]).includes(field))
-          setError(field as (typeof FIELDS)[number], { message });
-        else unmatched ??= message;
-      }
-      if (unmatched) setFormError(unmatched);
+      setFormError(applyFieldErrors(result.error, FIELDS, setError));
       return;
     }
     reset(EMPTY);
@@ -56,13 +52,9 @@ export function ChangePasswordForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit, () => setFormError(null))} noValidate className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">This signs you out on other devices.</p>
-      {formError && Object.keys(errors).length === 0 && (
-        <p role="alert" className="text-sm text-destructive">
-          {formError}
-        </p>
-      )}
+      <FormError message={formError} />
       {ROWS.map(([name, id, label, autoComplete]) => (
         <div key={name} className="flex flex-col gap-1.5">
           <Label htmlFor={id}>{label}</Label>
@@ -75,11 +67,7 @@ export function ChangePasswordForm() {
             aria-describedby={errors[name] ? `${id}-err` : undefined}
             {...register(name)}
           />
-          {errors[name] && (
-            <p id={`${id}-err`} className="text-sm text-destructive">
-              {errors[name]?.message}
-            </p>
-          )}
+          <FieldError id={`${id}-err`} message={errors[name]?.message} />
         </div>
       ))}
       <div>

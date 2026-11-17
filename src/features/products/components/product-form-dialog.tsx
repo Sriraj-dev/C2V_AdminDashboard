@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { FieldError } from "@/components/shared/field-error";
+import { FormError } from "@/components/shared/form-error";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { Product } from "@/lib/api/types";
+import { applyFieldErrors } from "@/lib/form-errors";
 import {
   productFormSchema,
   type ProductFormInput,
@@ -72,14 +75,7 @@ export function ProductFormDialog({
       result = await createProduct(values);
     }
     if (!result.ok) {
-      setFormError(result.error.message);
-      let unmatched: string | null = null;
-      for (const [field, message] of Object.entries(result.error.fieldErrors ?? {})) {
-        if ((FIELDS as readonly string[]).includes(field))
-          setError(field as (typeof FIELDS)[number], { message });
-        else unmatched ??= message;
-      }
-      if (unmatched) setFormError(unmatched);
+      setFormError(applyFieldErrors(result.error, FIELDS, setError));
       return;
     }
     toast.success(product ? "Product updated." : `${result.data.product.name} added.`);
@@ -102,18 +98,14 @@ export function ProductFormDialog({
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit(onSubmit, () => setFormError(null))} noValidate className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>{product ? "Edit product" : "Add product"}</DialogTitle>
             <DialogDescription>
               Shown in the next order form a customer opens.
             </DialogDescription>
           </DialogHeader>
-          {formError && Object.keys(errors).length === 0 && (
-            <p role="alert" className="text-sm text-destructive">
-              {formError}
-            </p>
-          )}
+          <FormError message={formError} />
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="product-sku">SKU</Label>
             <Input
@@ -124,11 +116,7 @@ export function ProductFormDialog({
               aria-describedby={errors.sku ? "product-sku-err" : undefined}
               {...register("sku")}
             />
-            {errors.sku && (
-              <p id="product-sku-err" className="text-sm text-destructive">
-                {errors.sku.message}
-              </p>
-            )}
+            <FieldError id="product-sku-err" message={errors.sku?.message} />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="product-name">Name</Label>
@@ -139,11 +127,7 @@ export function ProductFormDialog({
               aria-describedby={errors.name ? "product-name-err" : undefined}
               {...register("name")}
             />
-            {errors.name && (
-              <p id="product-name-err" className="text-sm text-destructive">
-                {errors.name.message}
-              </p>
-            )}
+            <FieldError id="product-name-err" message={errors.name?.message} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
@@ -157,11 +141,7 @@ export function ProductFormDialog({
                 aria-describedby={errors.price ? "product-price-err" : undefined}
                 {...register("price")}
               />
-              {errors.price && (
-                <p id="product-price-err" className="text-sm text-destructive">
-                  {errors.price.message}
-                </p>
-              )}
+              <FieldError id="product-price-err" message={errors.price?.message} />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="product-sort">Sort order</Label>
@@ -174,11 +154,7 @@ export function ProductFormDialog({
                 aria-describedby={errors.sortOrder ? "product-sort-err" : undefined}
                 {...register("sortOrder")}
               />
-              {errors.sortOrder && (
-                <p id="product-sort-err" className="text-sm text-destructive">
-                  {errors.sortOrder.message}
-                </p>
-              )}
+              <FieldError id="product-sort-err" message={errors.sortOrder?.message} />
             </div>
           </div>
           <Controller

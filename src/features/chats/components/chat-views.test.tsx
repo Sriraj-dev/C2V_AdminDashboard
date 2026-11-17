@@ -49,6 +49,20 @@ describe("ChatList", () => {
     expect(screen.getByRole("switch", { name: "Auto-refresh" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
   });
+  it("is the page's h1 at /chats and an h2 beside an open thread (the thread owns the h1)", () => {
+    render(<ChatList items={items} />);
+    expect(screen.getByRole("heading", { level: 1, name: "Chats" })).toBeInTheDocument();
+    cleanup();
+    pathname = "/chats/b";
+    render(<ChatList items={items} />);
+    expect(screen.getByRole("heading", { level: 2, name: "Chats" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 1 })).toBeNull();
+  });
+  it("titles a nameless customer by formatted phone without repeating it", () => {
+    const nameless: ChatListItem = { ...row("z", "", true, "in"), customer: { id: "z", profileName: null, phone: "919398651343" } };
+    render(<ChatList items={[nameless]} />);
+    expect(screen.getAllByText("+91 93986 51343")).toHaveLength(1);
+  });
 });
 
 describe("ChatThread", () => {
@@ -69,13 +83,28 @@ describe("ChatThread", () => {
       m("3", "in", "2026-11-16T05:00:00Z", null, "sticker"),
     ];
     render(<ChatThread customer={customer} canReply items={items} />);
-    expect(screen.getByRole("heading", { level: 2, name: "Asha" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { level: 1, name: "Asha" })).toBeInTheDocument();
+    expect(screen.getByText("+91 98000 00001")).toBeInTheDocument();
     expect(screen.getByText("15 Nov 2026")).toBeInTheDocument();
     expect(screen.getByText("16 Nov 2026")).toBeInTheDocument();
     const side = (t: string) => screen.getByText(t).closest("div.flex")!;
     expect(side("late night")).toHaveClass("justify-start");
     expect(side("next day reply")).toHaveClass("justify-end");
     expect(screen.getByText("[sticker]")).toBeInTheDocument();
+  });
+  it("titles a nameless customer by formatted phone, shown once", () => {
+    render(<ChatThread customer={{ ...customer, profileName: null }} canReply items={[]} />);
+    expect(screen.getByRole("heading", { level: 1, name: "+91 98000 00001" })).toBeInTheDocument();
+    expect(screen.getAllByText("+91 98000 00001")).toHaveLength(1);
+  });
+  it("draws *bold* as <strong> and never as HTML", () => {
+    const items = [
+      { ...m("1", "out", "2026-11-16T05:00:00Z", null), payload: { type: "text", text: { body: "Order *NF-1* <b>x</b>" } } },
+    ];
+    render(<ChatThread customer={customer} canReply items={items} />);
+    const strong = screen.getByText("NF-1");
+    expect(strong.tagName).toBe("STRONG");
+    expect(screen.getByText(/<b>x<\/b>/)).toBeInTheDocument();
   });
   it("shows an empty state with no messages", () => {
     render(<ChatThread customer={customer} canReply={false} items={[]} />);

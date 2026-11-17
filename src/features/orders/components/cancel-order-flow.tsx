@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
@@ -20,28 +20,30 @@ const REFUND_DESCRIPTION = "The full amount goes back through Cashfree. The cust
 export function CancelOrderFlow({ order, canCancel }: { order: FlowOrder; canCancel: boolean }) {
   const router = useRouter();
   const [refundOpen, setRefundOpen] = useState(false);
+  const [refreshing, startTransition] = useTransition();
+  const refresh = () => startTransition(() => router.refresh());
 
   async function onCancel() {
     const r = await cancelOrder(order.id);
     if (!r.ok) {
       toast.error(r.error.message);
-      router.refresh();
+      refresh();
       return;
     }
     toast.success("Order cancelled.");
     if (r.data.order.paymentStatus === "paid" && order.source === "one_time") setRefundOpen(true);
-    router.refresh();
+    refresh();
   }
 
   async function onRefund() {
     const r = await refundOrder(order.id);
     if (!r.ok) {
       toast.error(r.error.message);
-      router.refresh();
+      refresh();
       return;
     }
     toast.success(r.data.result === "already_refunded" ? "This order was already refunded." : "Refund issued.");
-    router.refresh();
+    refresh();
   }
 
   return (
@@ -49,7 +51,7 @@ export function CancelOrderFlow({ order, canCancel }: { order: FlowOrder; canCan
       {canCancel && (
         <ConfirmDialog
           trigger={
-            <Button variant="outline" className="min-h-11 md:min-h-8">
+            <Button variant="outline" className="min-h-11 md:min-h-8" disabled={refreshing}>
               Cancel order
             </Button>
           }

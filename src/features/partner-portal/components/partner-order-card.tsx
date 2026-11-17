@@ -2,7 +2,7 @@ import { MapPin, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import type { PartnerOrderView } from "@/lib/api/types";
-import { telHref } from "@/lib/format";
+import { nearLandmark, telHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { PartnerOrderActions } from "./partner-order-actions";
 
@@ -28,7 +28,7 @@ export function PartnerOrderCard({ order, token }: { order: PartnerOrderView; to
       <div className="flex flex-col gap-1 text-sm">
         <p className="font-medium">{order.customerName}</p>
         <p className="break-words">{address.line1}</p>
-        {address.landmark && <p className="break-words text-muted-foreground">Near {address.landmark}</p>}
+        {address.landmark && <p className="break-words text-muted-foreground">{nearLandmark(address.landmark)}</p>}
         <p className="text-muted-foreground">{address.pincode}</p>
       </div>
       <ul className="text-sm">

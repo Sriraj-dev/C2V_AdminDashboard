@@ -15,3 +15,9 @@ export function formatPhone(p: string): string {
 export function telHref(p: string): string {
   return `tel:+${toFullPhone(p)}`;
 }
+
+/** "Near <landmark>", without doubling "Near" when the customer already wrote it. */
+export function nearLandmark(landmark: string): string {
+  const t = landmark.trim();
+  return /^near\b/i.test(t) ? t : `Near ${t}`;
+}

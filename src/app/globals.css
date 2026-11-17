@@ -95,10 +95,11 @@
   --sidebar-ring: oklch(0.708 0 0);
   --status-neutral-bg: #f4f4f5;
   --status-neutral-fg: #52525b;
-  --status-info-bg: #eff6ff;
+  /* Confirmed (blue) and Assigned (fuchsia) must read as different at a glance. */
+  --status-info-bg: #dbeafe;
   --status-info-fg: #1d4ed8;
-  --status-accent-bg: #f5f3ff;
-  --status-accent-fg: #6d28d9;
+  --status-accent-bg: #fae8ff;
+  --status-accent-fg: #a21caf;
   --status-warning-bg: #fffbeb;
   --status-warning-fg: #b45309;
   --status-success-bg: #ecfdf5;
@@ -150,5 +151,28 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Tailwind v4 resets buttons to cursor: default; clickable controls show a pointer. */
+  button:not(:disabled):not([aria-disabled="true"]),
+  [role="button"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="switch"]:not(:disabled):not([data-disabled]),
+  [role="checkbox"]:not(:disabled):not([data-disabled]),
+  [role="radio"]:not(:disabled):not([data-disabled]),
+  [role="tab"]:not(:disabled):not([data-disabled]),
+  [role="menuitem"]:not([data-disabled]),
+  [role="menuitemcheckbox"]:not([data-disabled]),
+  [role="option"]:not([data-disabled]),
+  [role="combobox"]:not(:disabled):not([data-disabled]),
+  summary,
+  label:has(> button[role="switch"]:not(:disabled)),
+  label:has(> button[role="checkbox"]:not(:disabled)) {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"],
+  [role="switch"]:disabled,
+  [role="checkbox"]:disabled,
+  [role="radio"]:disabled {
+    cursor: not-allowed;
   }
 }

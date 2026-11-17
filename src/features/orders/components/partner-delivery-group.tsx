@@ -47,7 +47,7 @@ export function PartnerDeliveryGroup({ group, date, tenantName, link }: Props) {
                   href={`/orders/${o.id}`}
                   className="flex min-h-11 items-center justify-between gap-2 rounded-md border px-3 text-sm hover:bg-muted/50 md:min-h-9"
                 >
-                  <span className="font-medium">{o.orderCode}</span>
+                  <span className="shrink-0 font-medium whitespace-nowrap">{o.orderCode}</span>
                   <span className="min-w-0 flex-1 truncate">{customerName(o)}</span>
                   <StatusBadge status={o.status} />
                 </Link>

@@ -11,7 +11,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
     <main className="flex min-h-dvh items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle className="text-lg">C2V Vendor Login</CardTitle>
+          <CardTitle>
+            <h1 className="text-lg">C2V Vendor Login</h1>
+          </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {expired === "1" && (

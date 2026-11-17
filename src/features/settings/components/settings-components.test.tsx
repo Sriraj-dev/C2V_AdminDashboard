@@ -53,6 +53,37 @@ describe("SettingsForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "Save settings" }));
     expect(await screen.findByText("Bad link")).toBeTruthy();
   });
+  it("still shows a server error that matches no field next to field errors", async () => {
+    updateSettings.mockResolvedValue({
+      ok: false,
+      error: {
+        code: "validation_error",
+        message: "Check",
+        fieldErrors: { welcomeImageUrl: "Bad link", tenant: "Settings are locked" },
+      },
+    });
+    render(<SettingsForm settings={settings} />);
+    await userEvent.type(screen.getByLabelText("Welcome image link"), "https://a.com/x.png");
+    await userEvent.click(screen.getByRole("button", { name: "Save settings" }));
+    expect(await screen.findByText("Bad link")).toBeTruthy();
+    expect(screen.getByText("Settings are locked")).toHaveAttribute("role", "alert");
+  });
+});
+
+describe("ChangePasswordForm stale errors", () => {
+  it("clears an old server banner when the next submit fails client validation", async () => {
+    changePassword.mockResolvedValue({ ok: false, error: { code: "server_error", message: "Try again later." } });
+    render(<ChangePasswordForm />);
+    await userEvent.type(screen.getByLabelText("Current password"), "old-pass");
+    await userEvent.type(screen.getByLabelText(/^New password/), "brand-new-pass");
+    await userEvent.type(screen.getByLabelText("Confirm new password"), "brand-new-pass");
+    await userEvent.click(screen.getByRole("button", { name: "Change password" }));
+    expect(await screen.findByText("Try again later.")).toBeTruthy();
+    await userEvent.clear(screen.getByLabelText("Current password"));
+    await userEvent.click(screen.getByRole("button", { name: "Change password" }));
+    expect(await screen.findByText("Enter your current password")).toBeTruthy();
+    expect(screen.queryByText("Try again later.")).toBeNull();
+  });
 });
 
 describe("ChangePasswordForm", () => {
@@ -65,14 +96,21 @@ describe("ChangePasswordForm", () => {
   it("shows the wrong-current-password message inline", async () => {
     changePassword.mockResolvedValue({
       ok: false,
-      error: { code: "invalid_credentials", message: "Wrong password.", fieldErrors: { currentPassword: "Wrong password." } },
+      error: {
+        code: "invalid_credentials",
+        message: "Current password is wrong.",
+        fieldErrors: { currentPassword: "Current password is wrong." },
+      },
     });
     render(<ChangePasswordForm />);
     await userEvent.type(screen.getByLabelText("Current password"), "nope");
     await userEvent.type(screen.getByLabelText(/^New password/), "brand-new-pass");
     await userEvent.type(screen.getByLabelText("Confirm new password"), "brand-new-pass");
     await userEvent.click(screen.getByRole("button", { name: "Change password" }));
-    expect(await screen.findByText("Wrong password.")).toBeTruthy();
+    const msg = await screen.findByText("Current password is wrong.");
+    expect(msg).toHaveAttribute("role", "alert");
+    expect(screen.getByLabelText("Current password")).toHaveAttribute("aria-describedby", msg.id);
+    expect(screen.getAllByText("Current password is wrong.")).toHaveLength(1);
   });
   it("resets the fields and toasts on success", async () => {
     changePassword.mockResolvedValue({ ok: true, data: null });

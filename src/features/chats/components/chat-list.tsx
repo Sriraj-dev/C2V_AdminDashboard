@@ -8,17 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import type { ChatListItem } from "@/lib/api/types";
 import { formatRelative } from "@/lib/dates";
 import { cn } from "@/lib/utils";
-import { customerLabel, isAwaitingReply } from "../utils";
+import { customerLabel, customerSubtitle, isAwaitingReply } from "../utils";
 import { AutoRefreshSwitch } from "./auto-refresh-switch";
 
 export function ChatList({ items }: { items: ChatListItem[] }) {
   const pathname = usePathname();
   // Beside an open thread (md+) the thread header owns the refresh controls.
   const atList = pathname === "/chats";
+  const Heading = atList ? "h1" : "h2";
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold tracking-tight">Chats</h1>
+        {/* One h1 per page: the list title at /chats, the customer's name in an open thread. */}
+        <Heading className="text-xl font-semibold tracking-tight">Chats</Heading>
         {atList && (
           <div className="flex items-center gap-3">
             <AutoRefreshSwitch intervalMs={30_000} />
@@ -33,6 +35,7 @@ export function ChatList({ items }: { items: ChatListItem[] }) {
           {items.map((c) => {
             const href = `/chats/${c.customer.id}`;
             const selected = pathname === href;
+            const subtitle = customerSubtitle(c.customer);
             return (
               <li key={c.customer.id}>
                 <Link
@@ -49,9 +52,7 @@ export function ChatList({ items }: { items: ChatListItem[] }) {
                       {formatRelative(c.lastMessage.createdAt)}
                     </span>
                   </span>
-                  {c.customer.phone && (
-                    <span className="text-xs text-muted-foreground">{c.customer.phone}</span>
-                  )}
+                  {subtitle && <span className="text-xs text-muted-foreground">{subtitle}</span>}
                   <span className="truncate text-sm text-muted-foreground">
                     {c.lastMessage.direction === "out" && "You: "}
                     {c.lastMessage.text ?? "[message]"}

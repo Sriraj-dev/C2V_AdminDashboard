@@ -75,7 +75,7 @@ describe("changePassword", () => {
     expect(apiRequest).not.toHaveBeenCalled();
   });
   it("wrong current password shows the message, keeps the cookie, no redirect", async () => {
-    apiRequest.mockResolvedValue({ ok: false, error: { status: 401, code: "invalid_credentials", message: "Current password is wrong." } });
+    apiRequest.mockResolvedValue({ ok: false, error: { status: 401, code: "invalid_credentials", message: "Invalid username or password" } });
     const r = await changePassword(pw);
     expect(r).toMatchObject({
       ok: false,

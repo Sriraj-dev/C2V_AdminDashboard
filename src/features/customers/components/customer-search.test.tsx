@@ -48,3 +48,19 @@ describe("CustomerSearch", () => {
     expect(input().value).toBe("zed");
   });
 });
+
+describe("CustomerSearch stale echoes", () => {
+  it("does not reset the text when an older echo arrives after a second push", () => {
+    const { rerender } = render(<CustomerSearch value="" />);
+    fireEvent.change(input(), { target: { value: "a" } });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    fireEvent.change(input(), { target: { value: "ab" } });
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    rerender(<CustomerSearch value="a" />);
+    expect(input().value).toBe("ab");
+  });
+});
